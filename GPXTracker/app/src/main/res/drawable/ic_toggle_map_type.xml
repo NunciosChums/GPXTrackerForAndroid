@@ -1,0 +1,4 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+  <item android:drawable="@drawable/ic_toggle_map_type_selected" android:state_selected="true"/>
+  <item android:drawable="@drawable/ic_toggle_map_type_normal"/>
+</selector>

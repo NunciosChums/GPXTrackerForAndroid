@@ -3,8 +3,11 @@ package kr.susemi99.gpxtracker;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.ImageView;
 
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -17,23 +20,57 @@ import com.patloew.rxlocation.RxLocation;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import io.reactivex.disposables.Disposable;
+import kr.susemi99.gpxtracker.utils.AppPreference;
 
-public class MapsActivity extends FragmentActivity {
+public class MapsActivity extends AppCompatActivity {
 
   private GoogleMap map;
   private Disposable permissionDisposable;
   private Disposable myLocationDisposable;
   private RxLocation rxLocation;
-
+  private MenuItem shareFileItem;
+  private ImageView greenPin, redPin, routeIcon, mapTypeIcon;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.maps_activity);
-    SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 
+    SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
     rxLocation = new RxLocation(this);
     mapFragment.getMapAsync(mapReadyCallback);
+
+    greenPin = findViewById(R.id.greenPin);
+    greenPin.setOnClickListener(__ -> goToStartLocation());
+    greenPin.setEnabled(false);
+
+    redPin = findViewById(R.id.redPin);
+    redPin.setOnClickListener(__ -> goToEndLocation());
+    redPin.setEnabled(false);
+
+    routeIcon = findViewById(R.id.routeIcon);
+    routeIcon.setOnClickListener(__ -> zoomToFit());
+    routeIcon.setEnabled(false);
+
+    mapTypeIcon = findViewById(R.id.mapTypeIcon);
+    mapTypeIcon.setOnClickListener(__ -> toggleMapType());
+  }
+
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    getMenuInflater().inflate(R.menu.menu_map, menu);
+    shareFileItem = menu.findItem(R.id.menu_share);
+    shareFileItem.setEnabled(false);
+    return true;
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    if (item.getItemId() == R.id.menu_select_file) {
+      selectFile();
+    }
+
+    return super.onOptionsItemSelected(item);
   }
 
   @Override
@@ -76,9 +113,43 @@ public class MapsActivity extends FragmentActivity {
   }
 
   private void stopReceiveMyLocation() {
+    try {
+      myLocationDisposable.dispose();
+    } catch (Exception ignore) {}
+  }
+
+
+  private void selectFile() {
 
   }
 
+  private void goToStartLocation() {
+
+  }
+
+  private void goToEndLocation() {
+
+  }
+
+  private void zoomToFit() {
+
+  }
+
+  private void toggleMapType() {
+    boolean isNormal = map.getMapType() == GoogleMap.MAP_TYPE_NORMAL;
+    mapTypeIcon.setSelected(!isNormal);
+    int mapType = isNormal ? GoogleMap.MAP_TYPE_HYBRID : GoogleMap.MAP_TYPE_NORMAL;
+    map.setMapType(mapType);
+    AppPreference.instance().setMapType(mapType);
+  }
+
+  private void restoreMapType() {
+    int savedMapType = AppPreference.instance().getMapType();
+    map.setMapType(savedMapType);
+
+    boolean isNormal = savedMapType == GoogleMap.MAP_TYPE_NORMAL;
+    mapTypeIcon.setSelected(isNormal);
+  }
 
   /***********************************
    * listener
@@ -89,6 +160,7 @@ public class MapsActivity extends FragmentActivity {
       map = googleMap;
 
       setupMyLocation();
+      restoreMapType();
 
       LatLng sydney = new LatLng(-34, 151);
       map.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
