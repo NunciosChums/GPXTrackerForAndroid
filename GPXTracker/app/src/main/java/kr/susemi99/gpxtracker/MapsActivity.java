@@ -2,6 +2,7 @@ package kr.susemi99.gpxtracker;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -20,9 +21,11 @@ import com.patloew.rxlocation.RxLocation;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import io.reactivex.disposables.Disposable;
+import kr.susemi99.gpxtracker.constants.AppConstant;
 import kr.susemi99.gpxtracker.utils.AppPreference;
 
 public class MapsActivity extends AppCompatActivity {
+  private static final int REQUEST_CODE_FILE_LIST = 11;
 
   private GoogleMap map;
   private Disposable permissionDisposable;
@@ -67,7 +70,10 @@ public class MapsActivity extends AppCompatActivity {
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     if (item.getItemId() == R.id.menu_select_file) {
-      selectFile();
+      startActivityForResult(new Intent(getApplicationContext(), FileListActivity.class), REQUEST_CODE_FILE_LIST);
+    }
+    else if (item.getItemId() == shareFileItem.getItemId()) {
+      share();
     }
 
     return super.onOptionsItemSelected(item);
@@ -118,11 +124,6 @@ public class MapsActivity extends AppCompatActivity {
     } catch (Exception ignore) {}
   }
 
-
-  private void selectFile() {
-
-  }
-
   private void goToStartLocation() {
 
   }
@@ -149,6 +150,21 @@ public class MapsActivity extends AppCompatActivity {
 
     boolean isNormal = savedMapType == GoogleMap.MAP_TYPE_NORMAL;
     mapTypeIcon.setSelected(isNormal);
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+
+    if (REQUEST_CODE_FILE_LIST != requestCode || resultCode != RESULT_OK) {
+      return;
+    }
+
+    Log.i("APP# MapsActivity | onActivityResult", "|================="+data.getStringExtra(AppConstant.SELECTED_FILE_PATH));
+  }
+
+  private void share() {
+
   }
 
   /***********************************
