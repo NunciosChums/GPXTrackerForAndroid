@@ -23,7 +23,7 @@ public class FileUtil {
           result.addAll(extensionFiltering(file, extension));
         }
         else {
-          if (extensions.contains(file.getName().substring(file.getName().lastIndexOf(".")))) {
+          if (extensions.contains(getExtension(file.getName()))) {
             result.add(file);
           }
         }
@@ -31,5 +31,13 @@ public class FileUtil {
     }
 
     return result;
+  }
+
+  public static String getFileName(String path) {
+    return path.substring(path.lastIndexOf("/") + 1);
+  }
+
+  public static String getExtension(String path) {
+    return path.substring(path.lastIndexOf("."));
   }
 }

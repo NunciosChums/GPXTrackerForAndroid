@@ -84,6 +84,7 @@ public class FileListActivity extends AppCompatActivity {
   }
 
   private void reload() {
+    refreshLayout.setRefreshing(true);
     adapter.addAll(FileUtil.getFileList(EXTENTIONS));
     refreshLayout.setRefreshing(false);
   }

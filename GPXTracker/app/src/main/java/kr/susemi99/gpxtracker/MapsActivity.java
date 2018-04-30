@@ -22,6 +22,7 @@ import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import io.reactivex.disposables.Disposable;
 import kr.susemi99.gpxtracker.constants.AppConstant;
+import kr.susemi99.gpxtracker.parser.ParseHelper;
 import kr.susemi99.gpxtracker.utils.AppPreference;
 
 public class MapsActivity extends AppCompatActivity {
@@ -160,7 +161,12 @@ public class MapsActivity extends AppCompatActivity {
       return;
     }
 
-    Log.i("APP# MapsActivity | onActivityResult", "|================="+data.getStringExtra(AppConstant.SELECTED_FILE_PATH));
+    fileSelected(data.getStringExtra(AppConstant.SELECTED_FILE_PATH));
+  }
+
+  private void fileSelected(String filePath) {
+    ParseHelper parseHelper = new ParseHelper(filePath);
+    setTitle(parseHelper.title());
   }
 
   private void share() {
