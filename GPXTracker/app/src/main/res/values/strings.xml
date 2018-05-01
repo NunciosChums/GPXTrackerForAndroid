@@ -1,0 +1,4 @@
+<resources>
+  <string name="app_name">GPXTracker</string>
+  <string name="file_list_activity_title">Select log</string>
+</resources>
