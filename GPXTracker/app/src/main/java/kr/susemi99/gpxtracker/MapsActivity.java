@@ -11,19 +11,29 @@ import android.view.MenuItem;
 import android.widget.ImageView;
 
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.kml.KmlLayer;
 import com.patloew.rxlocation.RxLocation;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.concurrent.TimeUnit;
+
 import io.reactivex.disposables.Disposable;
 import kr.susemi99.gpxtracker.constants.AppConstant;
+import kr.susemi99.gpxtracker.models.GTLine;
+import kr.susemi99.gpxtracker.models.GTPin;
 import kr.susemi99.gpxtracker.parser.ParseHelper;
 import kr.susemi99.gpxtracker.utils.AppPreference;
+import kr.susemi99.gpxtracker.utils.FileUtil;
 
 public class MapsActivity extends AppCompatActivity {
   private static final int REQUEST_CODE_FILE_LIST = 11;
@@ -33,7 +43,9 @@ public class MapsActivity extends AppCompatActivity {
   private Disposable myLocationDisposable;
   private RxLocation rxLocation;
   private MenuItem shareFileItem;
-  private ImageView greenPin, redPin, routeIcon, mapTypeIcon;
+  private ImageView greenPin, redPin, zoomToFitIcon, mapTypeIcon;
+  private LatLngBounds zoomToFitBound;
+  private KmlLayer kmlLayer;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -52,9 +64,9 @@ public class MapsActivity extends AppCompatActivity {
     redPin.setOnClickListener(__ -> goToEndLocation());
     redPin.setEnabled(false);
 
-    routeIcon = findViewById(R.id.routeIcon);
-    routeIcon.setOnClickListener(__ -> zoomToFit());
-    routeIcon.setEnabled(false);
+    zoomToFitIcon = findViewById(R.id.zoomToFitIcon);
+    zoomToFitIcon.setOnClickListener(__ -> zoomToFit());
+    zoomToFitIcon.setEnabled(false);
 
     mapTypeIcon = findViewById(R.id.mapTypeIcon);
     mapTypeIcon.setOnClickListener(__ -> toggleMapType());
@@ -95,6 +107,7 @@ public class MapsActivity extends AppCompatActivity {
 
   @SuppressLint("MissingPermission")
   public void setupMyLocation() {
+    Log.i("APP# MapsActivity | setupMyLocation", "|" + "=====================");
     permissionDisposable = new RxPermissions(this)
       .request(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
       .subscribe(granted -> {
@@ -110,12 +123,15 @@ public class MapsActivity extends AppCompatActivity {
   @SuppressLint("MissingPermission")
   private void startReceiveMyLocation() {
 //    LocationRequest locationRequest = LocationRequest.create().setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-    LocationRequest locationRequest = LocationRequest.create().setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    LocationRequest locationRequest = LocationRequest.create()
+      .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+      .setInterval(TimeUnit.SECONDS.toMillis(10));
 
     myLocationDisposable = rxLocation.location()
       .updates(locationRequest)
       .subscribe(location -> {
         Log.i("APP# MapsActivity | startReceiveMyLocation", "|" + location);
+        map.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
       });
   }
 
@@ -134,7 +150,9 @@ public class MapsActivity extends AppCompatActivity {
   }
 
   private void zoomToFit() {
-
+    int padding = 50;
+    CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(zoomToFitBound, padding);
+    map.animateCamera(cu);
   }
 
   private void toggleMapType() {
@@ -165,12 +183,49 @@ public class MapsActivity extends AppCompatActivity {
   }
 
   private void fileSelected(String filePath) {
+    zoomToFitBound = null;
+    LatLngBounds.Builder zoomToFitBuilder = new LatLngBounds.Builder();
+    if (kmlLayer != null) { kmlLayer.removeLayerFromMap(); }
+    kmlLayer = null;
+
     ParseHelper parseHelper = new ParseHelper(filePath);
     setTitle(parseHelper.title());
+
+    if (".kml".equals(FileUtil.getExtension(filePath))) {
+      try {
+        File file = new File(filePath);
+        FileInputStream fileInputStream = new FileInputStream(file);
+        kmlLayer = new KmlLayer(map, fileInputStream, this);
+//        for (KmlPlacemark placemark : kmlLayer.li()) {
+//          Log.i("APP# MapsActivity | fileSelected", "|" + placemark.toString());
+//        }
+        kmlLayer.addLayerToMap();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+    else {
+      for (GTPin place : parseHelper.places()) {
+        map.addMarker(new MarkerOptions().position(place.location).title(place.title));
+        zoomToFitBuilder.include(place.location);
+      }
+
+      for (GTLine line : parseHelper.lines()) {
+        map.addPolyline(line.polyline);
+
+        for (LatLng location : line.locations) {
+          zoomToFitBuilder.include(location);
+        }
+      }
+
+      zoomToFitBound = zoomToFitBuilder.build();
+      zoomToFitIcon.setEnabled(true);
+
+      zoomToFit();
+    }
   }
 
   private void share() {
-
   }
 
   /***********************************
@@ -180,13 +235,20 @@ public class MapsActivity extends AppCompatActivity {
     @Override
     public void onMapReady(GoogleMap googleMap) {
       map = googleMap;
+      map.setBuildingsEnabled(true);
+
+      map.getUiSettings().setZoomControlsEnabled(true);
+      map.getUiSettings().setCompassEnabled(true);
+//      map.getUiSettings().setMyLocationButtonEnabled(true);
+      map.getUiSettings().setMapToolbarEnabled(true);
+      map.getUiSettings().setZoomGesturesEnabled(true);
+      map.getUiSettings().setScrollGesturesEnabled(true);
+      map.getUiSettings().setTiltGesturesEnabled(true);
+      map.getUiSettings().setRotateGesturesEnabled(true);
 
       setupMyLocation();
       restoreMapType();
-
-      LatLng sydney = new LatLng(-34, 151);
-      map.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-      map.moveCamera(CameraUpdateFactory.newLatLng(sydney));
     }
   };
+
 }

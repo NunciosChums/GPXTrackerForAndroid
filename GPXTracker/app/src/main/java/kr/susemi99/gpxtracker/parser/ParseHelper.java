@@ -5,7 +5,10 @@ import org.jsoup.nodes.Document;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
+import kr.susemi99.gpxtracker.models.GTLine;
+import kr.susemi99.gpxtracker.models.GTPin;
 import kr.susemi99.gpxtracker.utils.FileUtil;
 
 public class ParseHelper implements IParser {
@@ -47,5 +50,15 @@ public class ParseHelper implements IParser {
   @Override
   public String title() {
     return parser.title();
+  }
+
+  @Override
+  public ArrayList<GTPin> places() {
+    return parser.places();
+  }
+
+  @Override
+  public ArrayList<GTLine> lines() {
+    return parser.lines();
   }
 }

@@ -34,7 +34,7 @@
       android:src="@drawable/ic_red_pin"/>
 
     <ImageView
-      android:id="@+id/routeIcon"
+      android:id="@+id/zoomToFitIcon"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:background="?android:selectableItemBackgroundBorderless"
