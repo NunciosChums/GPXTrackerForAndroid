@@ -26,7 +26,8 @@ import kr.susemi99.gpxtracker.utils.FileUtil;
 import kr.susemi99.gpxtracker.widgets.RecyclerViewDivider;
 
 public class FileListActivity extends AppCompatActivity {
-  private static final String[] EXTENTIONS = {".gpx", ".tcx", ".kml", ".kmz"};
+  private static final String[] EXTENSIONS = {".gpx", ".kml"};
+//  private static final String[] EXTENSIONS = {".gpx", ".tcx", ".kml", ".kmz"};
 
   private SwipeRefreshLayout refreshLayout;
   private Disposable permissionDisposable;
@@ -85,7 +86,7 @@ public class FileListActivity extends AppCompatActivity {
 
   private void reload() {
     refreshLayout.setRefreshing(true);
-    adapter.addAll(FileUtil.getFileList(EXTENTIONS));
+    adapter.addAll(FileUtil.getFileList(EXTENSIONS));
     refreshLayout.setRefreshing(false);
   }
 

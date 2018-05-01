@@ -183,6 +183,7 @@ public class MapsActivity extends AppCompatActivity {
   }
 
   private void fileSelected(String filePath) {
+    map.clear();
     zoomToFitBound = null;
     LatLngBounds.Builder zoomToFitBuilder = new LatLngBounds.Builder();
     if (kmlLayer != null) { kmlLayer.removeLayerFromMap(); }
@@ -237,7 +238,7 @@ public class MapsActivity extends AppCompatActivity {
       map = googleMap;
       map.setBuildingsEnabled(true);
 
-      map.getUiSettings().setZoomControlsEnabled(true);
+//      map.getUiSettings().setZoomControlsEnabled(true);
       map.getUiSettings().setCompassEnabled(true);
 //      map.getUiSettings().setMyLocationButtonEnabled(true);
       map.getUiSettings().setMapToolbarEnabled(true);
