@@ -38,6 +38,10 @@ public class FileUtil {
   }
 
   public static String getExtension(String path) {
-    return path.substring(path.lastIndexOf("."));
+    try {
+      return path.substring(path.lastIndexOf("."));
+    } catch (Exception e) {
+      return null;
+    }
   }
 }
